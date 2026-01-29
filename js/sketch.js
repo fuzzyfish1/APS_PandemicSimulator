@@ -1,25 +1,24 @@
-// Global variable to share data between canvases
 let infectionRate = 30;
 let timeToDeath = 100;
-let graphData;
 let humans = [];
-let simInstance;
 
 const humanStatus = Object.freeze({
     DEATH: 'DEATH',
     HEALTHY: 'HEALTHY',
     SICK: 'SICK'
 });
-// --- DASHBOARD SKETCH ---
-const guiSketch = (p) => {
-    let history = [];
 
-    /**create the sliders and graph elements*/
+let simWidth = 600;
+let simHeight = 400;
+let numHumans = 50;
+let frame = 0;
+
+const simSketch = (p) => {
     p.setup = () => {
+
         let canvas = p.createCanvas(300, 300);
         canvas.parent('canvas-gui');
 
-        // Label and Slider 1
         let label1 = p.createP('Speed');
         label1.parent('controls');
         label1.addClass('slider-label');
@@ -46,54 +45,20 @@ const guiSketch = (p) => {
         btn.mousePressed(() => {
             resetSim(simInstance);
         });
-    };
 
-    /** graphing loop*/
-    p.draw = () => {
-        p.background(17, 34, 64);
-        p.frameRate(infectionRate);
-        // Draw a simple "SIR" Style Graph
-        p.stroke(100, 255, 218);
-        p.noFill();
-        p.beginShape();
-        for (frame in graphData) {
-            let val = graphData[frame][humanStatus.SICK] * 100;
-            p.vertex(frame, p.height - 50 - val);
-        }
-        // for (let i = 0; i < p.width; i++) {
-        //     let val = p.noise(i * 0.02, p.frameCount * 0.01) * 100;
-        //     p.vertex(i, p.height - 50 - val);
-        // }
-        p.endShape();
-        p.fill(255);
-        p.noStroke();
-        p.text("Live Infection Trend", 10, 20);
-    };
-};
-let simWidth = 600;
-let simHeight = 400;
-let numHumans = 50;
-let frame = 0;
-// --- SIMULATION SKETCH ---
-const simSketch = (p) => {
-    p.setup = () => {
-        let canvas = p.createCanvas(simWidth, simHeight);
-        canvas.parent('canvas-sim');
+        let canvasSim = p.createCanvas(simWidth, simHeight);
+        canvasSim.parent('canvas-sim');
         resetSim(p);
     };
 
     /** is basically loop() from arduino for each frame*/
     p.draw = () => {
         frame++;
+        if (infectionRate === 0) return; // pause simulation
         p.frameRate(infectionRate);
         p.background(10, 25, 47);
         p.textAlign(p.CENTER);
-        // graphData[frame][humanStatus.DEATH] = 0;
-        // graphData[frame][humanStatus.SICK] = 0;
-        // graphData[frame][humanStatus.HEALTHY] = 0;
-        // for (human in humans) {
-        //     graphData[frame][human.status]++;
-        // }
+
         for (let i = 0; i < numHumans; i++) {
             for (let j = i + 1; j < numHumans; j++) {
                 let distX = humans[i].x - humans[j].x;
@@ -110,7 +75,6 @@ const simSketch = (p) => {
     };
 };
 
-new p5(guiSketch);
 simInstance = new p5(simSketch);
 
 class simulatedHuman {
@@ -138,6 +102,7 @@ class simulatedHuman {
             this.status = humanStatus.DEATH;
             this.vx = 0;
             this.vy = 0;
+
         }
     }
 
@@ -172,7 +137,4 @@ let resetSim = (p) => {
 
     humans[0].status = humanStatus.SICK;
 
-    // graphData[0][humanStatus.DEATH] = 0;
-    // graphData[0][humanStatus.SICK] = 1;
-    // graphData[0][humanStatus.HEALTHY] = numHumans - 1;
 };
